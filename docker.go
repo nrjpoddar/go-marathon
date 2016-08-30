@@ -30,10 +30,11 @@ type Container struct {
 
 // PortMapping is the portmapping structure between container and mesos
 type PortMapping struct {
-	ContainerPort int    `json:"containerPort,omitempty"`
-	HostPort      int    `json:"hostPort"`
-	ServicePort   int    `json:"servicePort,omitempty"`
-	Protocol      string `json:"protocol,omitempty"`
+	ContainerPort int                `json:"containerPort,omitempty"`
+	HostPort      int                `json:"hostPort"`
+	ServicePort   int                `json:"servicePort,omitempty"`
+	Protocol      string             `json:"protocol,omitempty"`
+	Labels        *map[string]string `json:"labels,omitempty"`
 }
 
 // Parameters is the parameters to pass to the docker client when creating the container
@@ -168,6 +169,29 @@ func (docker *Docker) ExposePort(containerPort, hostPort, servicePort int, proto
 		HostPort:      hostPort,
 		ServicePort:   servicePort,
 		Protocol:      protocol})
+	docker.PortMappings = &portMappings
+
+	return docker
+}
+
+// ExposePortMapping exposes an portMapping in the container
+//		containerPort:      the container port which is being exposed
+//		hostPort:           the host port we should expose it on
+//		servicePort:        check the marathon documentation
+//		protocol:           the protocol to use TCP, UDP
+//		labels:             labels like VIP for port mappings
+func (docker *Docker) ExposePortMapping(containerPort, hostPort, servicePort int, protocol string, label *map[string]string) *Docker {
+	if docker.PortMappings == nil {
+		docker.EmptyPortMappings()
+	}
+
+	portMappings := *docker.PortMappings
+	portMappings = append(portMappings, PortMapping{
+		ContainerPort: containerPort,
+		HostPort:      hostPort,
+		ServicePort:   servicePort,
+		Protocol:      protocol,
+		Labels:        label})
 	docker.PortMappings = &portMappings
 
 	return docker

@@ -68,3 +68,27 @@ func TestDockerExposeUDP(t *testing.T) {
 	assert.Equal(t, *createPortMapping(5060, "udp"), (*portMappings)[1])
 	assert.Equal(t, *createPortMapping(6881, "udp"), (*portMappings)[2])
 }
+
+func TestDockerExposePortMapping(t *testing.T) {
+	app := NewDockerApplication()
+	labels := map[string]string{
+		"VIP_0": "10.1.2.3:9000",
+		"VIP_1": "10.5.6.7:8000",
+	}
+	portMapping := PortMapping{
+		ContainerPort: 80,
+		HostPort:      0,
+		ServicePort:   10000,
+		Protocol:      "tcp",
+		Labels:        &labels,
+	}
+	app.Container.Docker.ExposePortMapping(portMapping.ContainerPort, portMapping.HostPort, portMapping.ServicePort, portMapping.Protocol, portMapping.Labels)
+
+	for _, v := range *app.Container.Docker.PortMappings {
+		assert.Equal(t, portMapping.ContainerPort, v.ContainerPort)
+		assert.Equal(t, portMapping.HostPort, v.HostPort)
+		assert.Equal(t, portMapping.ServicePort, v.ServicePort)
+		assert.Equal(t, portMapping.Protocol, v.Protocol)
+		assert.Equal(t, portMapping.Labels, v.Labels)
+	}
+}
